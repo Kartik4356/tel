@@ -6,13 +6,13 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 app = Flask(__name__)
 
 # Your bot token from BotFather
-BOT_TOKEN = 'your_bot_token_here'
+BOT_TOKEN = '7949482176:AAGNKwe23jLD6vEfLNn398RCAvFqpLgoRsQ'
 bot = telegram.Bot(token=BOT_TOKEN)
 
 # Your Razorpay base link
-RAZORPAY_LINK = "https://rzp.io/l/abcd1234"  # replace with your real one
+RAZORPAY_LINK = "https://rzp.io/rzp/uZx91zho"  # replace with your real one
 # Your premium group invite link
-PREMIUM_LINK = "https://t.me/+yourpremiumgroup"
+PREMIUM_LINK = "https://t.me/+XcNakdRjPxVjYjc1"
 
 # ---------------------------- BOT HANDLER ----------------------------
 
