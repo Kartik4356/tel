@@ -38,7 +38,7 @@ def create_payment(chat_id):
         "customer": {
             "name": str(chat_id),
             "email": "test@example.com",
-            "contact": "9999999999"
+            "contact": "9309732258"
         },
         "notify": {"sms": False, "email": False},
         "reminder_enable": False,
