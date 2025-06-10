@@ -45,8 +45,7 @@ def create_payment(chat_id):
         "notes": {
             "telegram_id": str(chat_id)
         },
-        "callback_url": "https://tel-ntvy.onrender.com/webhook",
-        "callback_method": "post"
+        "callback_url": "https://tel-ntvy.onrender.com/webhook"
     }
 
     try:
@@ -73,6 +72,21 @@ def create_payment(chat_id):
     except Exception as e:
         print("❌ Exception while creating Razorpay link:", str(e))
         return "❌ Internal Server Error", 500
+
+@app.route('/telegram', methods=['POST'])
+def telegram_webhook():
+    data = request.json
+    print("📩 Telegram Webhook:", json.dumps(data, indent=2))
+
+    if 'message' in data:
+        chat_id = data['message']['chat']['id']
+        message_text = data['message'].get('text', '')
+
+        if message_text == '/start':
+            bot.send_message(chat_id=chat_id, text="👋 Welcome! Creating your payment link...")
+            create_payment(chat_id)  # Trigger payment creation
+
+    return '', 200
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
