@@ -1,41 +1,43 @@
 from flask import Flask, request
 import telegram
 import requests
+import json
 import os
 
-app = Flask(__name__)
+# --- CONFIGURATION ---
 
-# Telegram Bot Token
-BOT_TOKEN = '7949482176:AAGNKwe23jLD6vEfLNn398RCAvFqpLgoRsQ' 
+# Your Telegram Bot Token
+BOT_TOKEN = '7949482176:AAGNKwe23jLD6vEfLNn398RCAvFqpLgoRsQ'
 bot = telegram.Bot(token=BOT_TOKEN)
 
-# Razorpay API credentials
-RAZORPAY_KEY_ID = 'rzp_test_9jmsp32pcMtGTp'
-RAZORPAY_KEY_SECRET = 'LAN9inJeKUSqa7xMReMzafn2'
+# Your Razorpay Test API Keys
+RAZORPAY_KEY_ID = 'rzp_test_8XvL45O5H6KfyC'
+RAZORPAY_KEY_SECRET = 'F9jwbf7xYSF7fuiwfFFi2uQE'
 
-# Premium Telegram group link
-PREMIUM_LINK = "https://t.me/+XcNakdRjPxVjYjc1"   
+# Telegram Premium Group Invite Link
+PREMIUM_GROUP_LINK = "https://t.me/+2S_UBsFqIXsyMDU1"
+
+# Flask App
+app = Flask(__name__)
+
+# --- ENDPOINTS ---
 
 @app.route('/')
 def home():
-    return "Bot is running!"
+    return "Telegram + Razorpay bot is live!"
 
-# Telegram command handler
-@app.route('/start', methods=['POST'])
-def start():
-    data = request.get_json()
-    message = data['message']
-    chat_id = message['chat']['id']
+@app.route('/create_payment/<int:chat_id>')
+def create_payment(chat_id):
+    url = "https://api.razorpay.com/v1/payment_links"
 
-    # Create Razorpay payment link
     link_data = {
-        "amount": 10000,  # ₹100.00 (in paise)
+        "amount": 2000,  # ₹20.00 in paise
         "currency": "INR",
         "accept_partial": False,
         "description": "Access to Premium Telegram Group",
         "customer": {
             "name": str(chat_id),
-            "email": "test@example.com"  # dummy; Razorpay needs one
+            "email": "test@example.com"
         },
         "notify": {"sms": False, "email": False},
         "reminder_enable": False,
@@ -47,19 +49,17 @@ def start():
     }
 
     response = requests.post(
-        "https://api.razorpay.com/v1/payment_links",
+        url,
         auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET),
-        json=link_data
-    )
-    
-    payment_link = response.json()['short_url']
-
-    bot.send_message(
-        chat_id=chat_id,
-        text=f"💳 Please complete the payment to access the premium group:\n{payment_link}"
+        data=json.dumps(link_data),
+        headers={'Content-Type': 'application/json'}
     )
 
-    return '', 200
+    result = response.json()
+    payment_url = result['short_url']
+
+    bot.send_message(chat_id=chat_id, text=f"Click below to pay ₹20 and get premium access:\n{payment_url}")
+    return "Payment link sent to Telegram!"
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
@@ -67,13 +67,9 @@ def webhook():
     if data.get('event') == 'payment.captured':
         payment_info = data['payload']['payment']['entity']
         telegram_id = payment_info['notes'].get('telegram_id')
-
-        if telegram_id:
-            bot.send_message(
-                chat_id=telegram_id,
-                text=f"✅ Payment received! Here is your premium access:\n{PREMIUM_LINK}"
-            )
+        bot.send_message(chat_id=telegram_id, text=f"✅ Payment received! Here's your premium access:\n{PREMIUM_GROUP_LINK}")
     return '', 200
 
+# --- RUN APP ---
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000)
+    app.run(host='0.0.0.0', port=10000)
