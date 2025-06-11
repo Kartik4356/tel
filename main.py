@@ -2,7 +2,6 @@ from flask import Flask, request
 import telegram
 import requests
 import json
-import os
 
 # --- CONFIGURATION ---
 
@@ -26,8 +25,21 @@ app = Flask(__name__)
 def home():
     return "✅ Telegram + Razorpay Bot is Live!"
 
-@app.route('/create_payment/<int:chat_id>')
-def create_payment(chat_id):
+@app.route('/telegram', methods=['POST'])
+def telegram_webhook():
+    data = request.json
+    print("📩 Telegram Webhook:", json.dumps(data, indent=2))
+
+    if 'message' in data:
+        chat_id = data['message']['chat']['id']
+        message_text = data['message'].get('text', '')
+
+        if message_text == '/start':
+            bot.send_message(chat_id=chat_id, text="👋 Welcome! Creating your payment link...")
+            create_payment_link(chat_id)
+    return '', 200
+
+def create_payment_link(chat_id):
     url = "https://api.razorpay.com/v1/payment_links"
 
     link_data = {
@@ -38,7 +50,7 @@ def create_payment(chat_id):
         "customer": {
             "name": str(chat_id),
             "email": "test@example.com",
-            "contact": "9309732258"
+            "contact": "9876543210"  # ✅ Use realistic number
         },
         "notify": {"sms": False, "email": False},
         "reminder_enable": False,
@@ -63,30 +75,13 @@ def create_payment(chat_id):
         if 'short_url' in result:
             payment_url = result['short_url']
             bot.send_message(chat_id=chat_id, text=f"💳 Click below to pay ₹20 and get premium access:\n{payment_url}")
-            return "✅ Payment link sent to Telegram!"
         else:
             error_message = result.get("error", {}).get("description", "Unknown Razorpay error.")
             bot.send_message(chat_id=chat_id, text=f"❌ Payment link could not be created:\n{error_message}")
-            return f"❌ Razorpay Error:\n{json.dumps(result, indent=2)}", 500
 
     except Exception as e:
         print("❌ Exception while creating Razorpay link:", str(e))
-        return "❌ Internal Server Error", 500
-
-@app.route('/telegram', methods=['POST'])
-def telegram_webhook():
-    data = request.json
-    print("📩 Telegram Webhook:", json.dumps(data, indent=2))
-
-    if 'message' in data:
-        chat_id = data['message']['chat']['id']
-        message_text = data['message'].get('text', '')
-
-        if message_text == '/start':
-            bot.send_message(chat_id=chat_id, text="👋 Welcome! Creating your payment link...")
-            create_payment(chat_id)  # Trigger payment creation
-
-    return '', 200
+        bot.send_message(chat_id=chat_id, text="❌ An error occurred while creating the payment link.")
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
