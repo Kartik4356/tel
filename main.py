@@ -14,7 +14,7 @@ RAZORPAY_KEY_ID = 'rzp_test_8XvL45O5H6KfyC'
 RAZORPAY_KEY_SECRET = 'F9jwbf7xYSF7fuiwfFFi2uQE'
 
 # Premium Telegram Group Invite Link
-PREMIUM_GROUP_LINK = "https://t.me/+2S_UBsFqIXsyMDU1"
+PREMIUM_GROUP_LINK = "https://t.me/+R5HLRsfd7K0wNjVl"
 
 # Flask App
 app = Flask(__name__)
